@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ContactsWebApi.Models;
 using ContactsWebApi.Repositories;
+using ContactsWebApi.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -26,6 +27,7 @@ namespace ContactsWebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddScoped<IContactService, ContactService>();
             services.AddScoped<IContactRepository, ContactRepository>();
             services.AddDbContext<ContactsDbContext>(options =>
             {
