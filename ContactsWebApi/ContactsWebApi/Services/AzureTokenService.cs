@@ -5,19 +5,20 @@ using System.Threading.Tasks;
 using ContactsWebApi.Models;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Options;
-
+using System.Net.Http;
+using Newtonsoft.Json;
 namespace ContactsWebApi.Services
 {
-    public class AzureTokenSevice : IAzureTokenService
+    public class AzureTokenService : IAzureTokenService
     {
           private readonly AzureSettings _azureSettings;
 
-            public AzureTokenSevice(IOptions<AzureSettings> settings)
+            public AzureTokenService(IOptions<AzureSettings> settings)
             {
                 _azureSettings = settings.Value;
             }
 
-            public Task<AccessToken> AuthenticateUser(UserCredentials userCredentials)
+        public async Task<AccessToken> AuthenticateUser(UserCredentials userCredentials)
         {
             var authenticationParams = new List<KeyValuePair<string, string>>
             {
@@ -28,8 +29,23 @@ namespace ContactsWebApi.Services
                 new KeyValuePair<string, string>("grant_type", _azureSettings.GrantType),
                 new KeyValuePair<string, string>("client_secret", _azureSettings.Key)
             };
+            AccessToken token = null;
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Add("Cache-Control", "no-cache");
+                HttpContent content = new FormUrlEncodedContent(authenticationParams);
+                var response = await httpClient.PostAsync(_azureSettings.AuthenticationEndpoint, content);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadAsStringAsync();
+                    token = JsonConvert.DeserializeObject<AccessToken>(data);
+                }
+            }
+            return token;
 
         }
     }
+
 
 }
